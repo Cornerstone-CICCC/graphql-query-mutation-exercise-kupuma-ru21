@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "target": "ES6",
-    "module": "CommonJS",
-    "strict": true,
-    "esModuleInterop": false
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+    "rootDirs": ["src"],
+    "outDir": "dist",
+    "lib": ["es2020"],
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node"]
+  }
 }

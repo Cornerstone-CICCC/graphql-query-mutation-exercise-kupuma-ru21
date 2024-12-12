@@ -1,17 +1,15 @@
-import { ApolloServer } from "@apollo/server"
-import { startStandaloneServer } from '@apollo/server/standalone'
-import { v4 as uuidv4 } from 'uuid'
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+import { v4 as uuidv4 } from "uuid";
 
-// Products dataset
 let products = [
   { id: "1", productName: "Apple", price: 3.99, qty: 2 },
   { id: "2", productName: "Banana", price: 1.99, qty: 3 },
-  { id: "3", productName: "Orange", price: 2.00, qty: 4 },
-  { id: "4", productName: "Mango", price: 5.50, qty: 5 },
-  { id: "5", productName: "Watermelon", price: 8.99, qty: 2 }
-]
+  { id: "3", productName: "Orange", price: 2.0, qty: 4 },
+  { id: "4", productName: "Mango", price: 5.5, qty: 5 },
+  { id: "5", productName: "Watermelon", price: 8.99, qty: 2 },
+];
 
-// Type Definitions
 const typeDefs = `#graphql
   type Product {
     id: ID!,
@@ -23,8 +21,10 @@ const typeDefs = `#graphql
   type Query {
     products: [Product],
     getProductById(id: ID): Product,
-    getProductTotalPrice(id: ID): Float # multiply product price with its qty
-    getTotalQtyOfProducts(): Int # sum of all qty of all products
+    # multiply product price with its qty
+    getProductTotalPrice(id: ID): Float,
+    # sum of all qty of all products
+    getTotalQtyOfProducts: Int
   }
 
   type Mutation {
@@ -32,33 +32,73 @@ const typeDefs = `#graphql
     updateProduct(id: ID, productName: String, price: Float, qty: Int): Product
     deleteProduct(id: ID): Product
   }
-`
+`;
 
-// Resolvers - Finish This
+// Resolvers define how to fetch the types defined in your schema.
+// This resolver retrieves books from the "books" array above.
 const resolvers = {
   Query: {
     products: () => products,
-    getProductById: () => {},
-    getProductTotalPrice: () => {},
-    getTotalQtyOfProducts: () => {}
+    getProductById: (_, args: { id: string }) => {
+      return products.find((product) => product.id === args.id);
+    },
+    getProductTotalPrice: (_, args: { id: string }) => {
+      const product = products.find((product) => product.id === args.id);
+      return product.price * product.qty;
+    },
+    getTotalQtyOfProducts: () => {
+      return products.reduce((acc, product) => acc + product.qty, 0);
+    },
   },
   Mutation: {
-    addProduct: () => {},
-    updateProduct: () => {},
-    deleteProduct: () => {}
+    addProduct: (_, args: Omit<Product, "id">) => {
+      const newProduct = {
+        id: uuidv4(),
+        productName: args.productName,
+        price: args.price,
+        qty: args.qty,
+      };
+      products.push(newProduct);
+      return newProduct;
+    },
+    updateProduct: (_, args: Product) => {
+      const productIndex = products.findIndex(
+        (product) => product.id === args.id
+      );
+      if (productIndex !== -1) {
+        products[productIndex] = args;
+        return args;
+      }
+      return null;
+    },
+    deleteProduct: (_, args: { id: string }) => {
+      const productIndex = products.findIndex(
+        (product) => product.id === args.id
+      );
+      if (productIndex !== -1) {
+        const deletedProduct = products[productIndex];
+        products = products.filter((product) => product.id !== args.id);
+        return deletedProduct;
+      }
+      return null;
+    },
   },
-}
+};
 
-// Create Apollo Server
 const server = new ApolloServer({
   typeDefs,
-  resolvers
-})
+  resolvers,
+});
 
-// Start Apollo Server
-const startServer = async () => {
-  const { url } = await startStandaloneServer(server)
-  console.log(`Server is running on ${url}...`)
-}
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 },
+});
 
-startServer()
+console.log(`🚀  Server ready at: ${url}`);
+
+type Product = {
+  id: string;
+  productName: string;
+  price: number;
+  qty: number;
+};
